@@ -154,38 +154,17 @@ The README and GitHub documentation are intentionally kept in English so that th
 
 ## Screenshots
 
-Screenshots are highly recommended for the GitHub README.
+### Desktop Explorer
 
-Create a folder like this:
-
-```text
-docs/
-└── screenshots/
-    ├── desktop-explorer.png
-    ├── mobile-explorer.png
-    ├── media-preview.png
-    └── login.png
-```
-
-Then add them here:
-
-```markdown
 ![Desktop Explorer](docs/screenshots/desktop-explorer.png)
-![Mobile Explorer](docs/screenshots/mobile-explorer.png)
-![Media Preview](docs/screenshots/media-preview.png)
+
+### Login
+
 ![Login](docs/screenshots/login.png)
-```
 
-Suggested screenshots:
+### Media Preview
 
-1. Login screen
-2. Telegram connection screen
-3. Desktop Explorer overview
-4. File preview modal
-5. Mobile layout
-6. Search result example
-
-Avoid showing private file names, phone numbers, API hashes, Telegram codes or personal data in screenshots.
+![Media Preview](docs/screenshots/media-preview.png)
 
 ---
 
