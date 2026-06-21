@@ -1,0 +1,17 @@
+[Unit]
+Description=Telegram Drive Web Explorer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=telegramdrive
+Group=telegramdrive
+WorkingDirectory=/opt/telegram-drive-web
+EnvironmentFile=/opt/telegram-drive-web/.env
+ExecStart=/opt/telegram-drive-web/.venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

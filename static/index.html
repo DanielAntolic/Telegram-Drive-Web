@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Telegram Drive Web</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div id="toastHost" class="toast-host" aria-live="polite" aria-atomic="true"></div>
+
+  <main id="authShell" class="auth-shell">
+    <div class="auth-language">
+      <select class="language-select" data-language-select aria-label="Language">
+        <option value="de">Deutsch</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <section id="setupWarning" class="auth-card warning hidden">
+      <div class="auth-mark">!</div>
+      <h1 data-i18n="setupWarningTitle">Server-Passwort fehlt</h1>
+      <p><span data-i18n="setupWarningText">Setze TDWEB_SERVER_PASSWORD in deiner .env und starte den Container neu.</span></p>
+    </section>
+
+    <section id="serverLoginCard" class="auth-card hidden">
+      <div class="brand-stack center">
+        <div class="logo-mark">TD</div>
+        <p class="eyebrow" data-i18n="linuxEdition">Linux Server Edition</p>
+        <h1>Telegram Drive Web</h1>
+        <p data-i18n="unlockIntro">Entsperre deine private Dateioberfläche.</p>
+      </div>
+      <form id="serverLoginForm" class="form-stack">
+        <label>
+          <span data-i18n="webPassword">Web-Passwort</span>
+          <input id="serverPassword" type="password" autocomplete="current-password" data-i18n-placeholder="webPasswordPlaceholder" placeholder="Passwort eingeben" required />
+        </label>
+        <button type="submit" class="primary full" data-i18n="login">Einloggen</button>
+      </form>
+    </section>
+
+    <section id="telegramLoginCard" class="auth-card wide hidden">
+      <div class="login-grid">
+        <div class="brand-stack">
+          <div class="logo-mark">TD</div>
+          <p class="eyebrow" data-i18n="connectTelegram">Telegram verbinden</p>
+          <h1 data-i18n="telegramLoginTitle">Einmaliger Telegram Login</h1>
+          <p><span data-i18n="telegramLoginIntro">Du brauchst deine API ID und deinen API Hash von</span> <code>my.telegram.org</code>.</p>
+        </div>
+
+        <div class="login-forms">
+          <form id="telegramStartForm" class="form-stack">
+            <label>
+              <span>API ID</span>
+              <input id="apiId" type="number" inputmode="numeric" required />
+            </label>
+            <label>
+              <span>API Hash</span>
+              <input id="apiHash" type="text" required />
+            </label>
+            <label>
+              <span data-i18n="phoneWithCountry">Telefonnummer mit Ländercode</span>
+              <input id="phone" type="tel" placeholder="+491701234567" required />
+            </label>
+            <button type="submit" class="primary full" data-i18n="requestCode">Code anfordern</button>
+          </form>
+
+          <form id="telegramCodeForm" class="form-stack hidden">
+            <label>
+              <span data-i18n="telegramCode">Telegram-Code</span>
+              <input id="telegramCode" type="text" inputmode="numeric" autocomplete="one-time-code" />
+            </label>
+            <button type="submit" class="primary full" data-i18n="confirmCode">Code bestätigen</button>
+          </form>
+
+          <form id="telegramPasswordForm" class="form-stack hidden">
+            <label>
+              <span data-i18n="twoFaPassword">2FA-Passwort</span>
+              <input id="telegramPassword" type="password" autocomplete="current-password" />
+            </label>
+            <button type="submit" class="primary full" data-i18n="confirmTwoFa">2FA bestätigen</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section id="driveApp" class="drive-app hidden">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo-mark small">TD</div>
+        <div>
+          <strong>Telegram Drive</strong>
+          <span>Web Explorer</span>
+        </div>
+      </div>
+
+      <nav class="side-nav" data-i18n-aria="quickAccess" aria-label="Schnellzugriff">
+        <button id="navAll" class="nav-item active" type="button"><span class="nav-icon">◎</span><span data-i18n="allFiles">Alle Dateien</span></button>
+        <button id="navRoot" class="nav-item" type="button"><span class="nav-icon">⌂</span><span data-i18n="driveRoot">Drive Root</span></button>
+      </nav>
+
+      <div class="sidebar-section">
+        <div class="section-title">
+          <span data-i18n="folders">Ordner</span>
+          <button id="sidebarNewFolderBtn" class="icon-button" type="button" data-i18n-title="newFolder" title="Neuer Ordner">＋</button>
+        </div>
+        <div id="folderTree" class="folder-tree"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="account-card">
+          <div class="avatar" id="accountAvatar">D</div>
+          <div>
+            <strong id="accountName">Telegram</strong>
+            <span id="accountSubline" data-i18n="connected">Verbunden</span>
+          </div>
+        </div>
+        <button id="telegramLogoutBtn" class="ghost full" type="button" data-i18n="telegramLogout">Telegram ausloggen</button>
+        <button id="serverLogoutBtn" class="ghost full" type="button" data-i18n="webLogout">Web-Logout</button>
+      </div>
+    </aside>
+
+    <div id="sidebarOverlay" class="sidebar-overlay mobile-only"></div>
+
+    <div class="main-panel">
+      <header class="commandbar">
+        <div class="left-command">
+          <button id="sidebarToggleBtn" class="icon-button mobile-only" type="button" data-i18n-title="openSidebar" title="Sidebar öffnen">☰</button>
+          <div id="breadcrumbs" class="breadcrumbs" aria-label="Breadcrumb"></div>
+        </div>
+
+        <div class="searchbox">
+          <span aria-hidden="true">⌕</span>
+          <input id="globalSearch" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="searchCurrent" placeholder="Dateien suchen" />
+          <button id="clearSearchBtn" class="clear-search hidden" type="button" data-i18n-title="clearSearch" title="Suche löschen">×</button>
+        </div>
+
+        <div class="command-actions">
+          <select class="language-select compact" data-language-select aria-label="Language">
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+          </select>
+          <button id="refreshBtn" class="secondary" type="button" data-i18n="refresh">Aktualisieren</button>
+          <button id="uploadOpenBtn" class="primary" type="button" data-i18n="upload">Hochladen</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="overview-strip">
+          <article class="metric-card accent">
+            <span data-i18n="files">Dateien</span>
+            <strong id="statFiles">–</strong>
+            <small data-i18n="scanned">gescannt</small>
+          </article>
+          <article class="metric-card">
+            <span data-i18n="storage">Speicher</span>
+            <strong id="statSize">–</strong>
+            <small data-i18n="inTelegram">in Telegram</small>
+          </article>
+          <article class="metric-card">
+            <span data-i18n="folders">Ordner</span>
+            <strong id="statFolders">–</strong>
+            <small data-i18n="virtual">virtuell</small>
+          </article>
+          <article class="drop-card" id="dropzone">
+            <div>
+              <strong data-i18n="dropFilesHere">Dateien hier ablegen</strong>
+              <span data-i18n="uploadCurrentFolder">Upload in den aktuellen Ordner</span>
+            </div>
+            <button id="dropUploadBtn" type="button" class="secondary" data-i18n="choose">Auswählen</button>
+          </article>
+        </section>
+
+        <section class="explorer-card">
+          <div class="explorer-toolbar">
+            <div class="explorer-heading">
+              <p class="eyebrow" id="scopeLabel">Alle Dateien</p>
+              <h2 id="currentTitle">Meine Dateien</h2>
+              <span id="itemSummary" class="muted">Wird geladen …</span>
+            </div>
+            <div class="toolbar-actions">
+              <button id="newFolderBtn" class="secondary" type="button" data-i18n="newFolder">Neuer Ordner</button>
+              <select id="sortSelect" data-i18n-title="sort" title="Sortieren">
+                <option value="date-desc" data-i18n="sortDateDesc">Neueste zuerst</option>
+                <option value="date-asc" data-i18n="sortDateAsc">Älteste zuerst</option>
+                <option value="name-asc" data-i18n="sortNameAsc">Name A–Z</option>
+                <option value="name-desc" data-i18n="sortNameDesc">Name Z–A</option>
+                <option value="size-desc" data-i18n="sortSizeDesc">Größe absteigend</option>
+                <option value="size-asc" data-i18n="sortSizeAsc">Größe aufsteigend</option>
+              </select>
+              <div class="segmented" role="group" data-i18n-aria="view" aria-label="Ansicht">
+                <button id="listViewBtn" type="button" class="active" data-i18n="list">Liste</button>
+                <button id="gridViewBtn" type="button" data-i18n="tiles">Kacheln</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="searchHint" class="search-hint hidden"></div>
+
+          <div id="loadingState" class="loading-state hidden">
+            <div class="spinner"></div>
+            <span data-i18n="loadingFiles">Dateien werden geladen …</span>
+          </div>
+
+          <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon">☁</div>
+            <h3 id="emptyTitle" data-i18n="emptyTitle">Dieser Bereich ist leer</h3>
+            <p id="emptyText" data-i18n="emptyText">Lade eine Datei hoch oder erstelle einen virtuellen Ordner.</p>
+            <button id="emptyUploadBtn" class="primary" type="button" data-i18n="uploadFile">Datei hochladen</button>
+          </div>
+
+          <div id="listView" class="list-view">
+            <div class="list-head">
+              <span data-i18n="name">Name</span>
+              <span data-i18n="folder">Ordner</span>
+              <span data-i18n="size">Größe</span>
+              <span data-i18n="date">Datum</span>
+              <span data-i18n="actions">Aktionen</span>
+            </div>
+            <div id="explorerRows" class="explorer-rows"></div>
+          </div>
+
+          <div id="gridView" class="grid-view hidden"></div>
+
+          <div class="load-more-row">
+            <button id="loadMoreBtn" class="secondary hidden" type="button" data-i18n="loadMore">Mehr laden</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <aside id="detailsPane" class="details-pane"></aside>
+  </section>
+
+  <dialog id="uploadDialog" class="modal">
+    <form id="uploadForm" class="modal-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Upload</p>
+          <h2 data-i18n="uploadFiles">Dateien hochladen</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-modal="uploadDialog" aria-label="Close">×</button>
+      </div>
+      <label>
+        <span data-i18n="targetFolder">Zielordner</span>
+        <input id="uploadFolder" type="text" data-i18n-placeholder="folderPlaceholder" placeholder="z.B. Dokumente/FOM" />
+      </label>
+      <label>
+        <span data-i18n="files">Dateien</span>
+        <input id="uploadFile" type="file" multiple required />
+      </label>
+      <div id="uploadProgressWrap" class="progress-wrap hidden">
+        <div class="progress-meta"><span id="uploadProgressText">Upload läuft …</span><span id="uploadProgressPct">0%</span></div>
+        <div class="progress"><div id="uploadProgressBar"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="secondary" type="button" data-close-modal="uploadDialog" data-i18n="cancel">Abbrechen</button>
+        <button class="primary" type="submit" data-i18n="upload">Hochladen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="newFolderDialog" class="modal">
+    <form id="newFolderForm" class="modal-card compact">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow" data-i18n="folder">Ordner</p>
+          <h2 data-i18n="newFolder">Neuer Ordner</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-modal="newFolderDialog" aria-label="Close">×</button>
+      </div>
+      <label>
+        <span data-i18n="nameOrPath">Name oder Pfad</span>
+        <input id="newFolderName" type="text" data-i18n-placeholder="folderPlaceholder" placeholder="z.B. Dokumente/FOM" required />
+      </label>
+      <div class="modal-actions">
+        <button class="secondary" type="button" data-close-modal="newFolderDialog" data-i18n="cancel">Abbrechen</button>
+        <button class="primary" type="submit" data-i18n="create">Erstellen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="renameDialog" class="modal">
+    <form id="renameForm" class="modal-card compact">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow" id="renameTypeLabel">Bearbeiten</p>
+          <h2 id="renameDialogTitle">Umbenennen</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-modal="renameDialog" aria-label="Close">×</button>
+      </div>
+      <label id="renameNameLabel">
+        <span data-i18n="name">Name</span>
+        <input id="renameName" type="text" />
+      </label>
+      <label>
+        <span data-i18n="folderPath">Ordnerpfad</span>
+        <input id="renameFolder" type="text" data-i18n-placeholder="folderPlaceholder" placeholder="z.B. Dokumente/FOM" />
+      </label>
+      <div class="modal-actions">
+        <button class="secondary" type="button" data-close-modal="renameDialog" data-i18n="cancel">Abbrechen</button>
+        <button class="primary" type="submit" data-i18n="save">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="previewDialog" class="modal preview-dialog">
+    <div class="modal-card preview-card">
+      <div class="modal-header preview-header">
+        <div>
+          <p class="eyebrow" data-i18n="preview">Vorschau</p>
+          <h2 id="previewTitle" data-i18n="viewFile">Datei ansehen</h2>
+          <span id="previewMeta" class="muted"></span>
+        </div>
+        <button class="icon-button" type="button" data-close-modal="previewDialog" aria-label="Close">×</button>
+      </div>
+      <div id="previewStage" class="preview-stage">
+        <div class="preview-placeholder" data-i18n="previewLoading">Vorschau wird geladen …</div>
+      </div>
+      <div class="modal-actions">
+        <a id="previewOpenBtn" class="secondary as-button" target="_blank" rel="noopener" data-i18n="openNewTab">In neuem Tab öffnen</a>
+        <a id="previewDownloadBtn" class="primary as-button" target="_blank" rel="noopener" data-i18n="download">Download</a>
+      </div>
+    </div>
+  </dialog>
+
+  <input id="hiddenFilePicker" type="file" multiple class="hidden" />
+  <script src="/static/app.js"></script>
+</body>
+</html>
