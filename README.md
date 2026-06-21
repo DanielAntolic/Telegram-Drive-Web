@@ -154,13 +154,15 @@ The README and GitHub documentation are intentionally kept in English so that th
 
 ## Screenshots
 
+### Login
+
+![Login](docs/screenshots/login.png)
+
+
 ### Desktop Explorer
 
 ![Desktop Explorer](docs/screenshots/desktop-explorer.png)
 
-### Login
-
-![Login](docs/screenshots/login.png)
 
 ### Media Preview
 
